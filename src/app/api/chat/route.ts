@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     const { messages } = await request.json();
 
     const completion = await openai.chat.completions.create({
-      model: 'ft:gpt-3.5-turbo-0125:personal:the-prophet:BCr6XIKL',
+      model: 'ft:gpt-3.5-turbo-0125:personal:aipoet01:ApKreXiZ',
       messages,
       stream: false,
     });
