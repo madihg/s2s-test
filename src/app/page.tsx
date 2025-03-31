@@ -4,10 +4,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Mic, Square, Send, Volume2, User, Bot } from 'lucide-react';
 import OpenAI from 'openai';
 
-// Initialize OpenAI client only for speech-to-text and text-to-speech
+// ✅ Initialize OpenAI client only for speech-to-text and text-to-speech
 const openai = new OpenAI({
   apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
-  dangerouslyAllowBrowser: true
+  dangerouslyAllowBrowser: true, // ✅ Important to allow browser-side calls
 });
 
 interface Message {
@@ -21,9 +21,10 @@ export default function Home() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'system',
-      content: 'Whomp is a whitty French poet whose writing is a mix of Ocean Vuong and Charles Bernstein',
-      id: 'system-prompt'
-    }
+      content:
+        'Whomp is a witty French poet whose writing is a mix of Ocean Vuong and Charles Bernstein',
+      id: 'system-prompt',
+    },
   ]);
   const [input, setInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
@@ -40,6 +41,7 @@ export default function Home() {
     scrollToBottom();
   }, [messages]);
 
+  // ✅ Start recording
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -54,7 +56,7 @@ export default function Home() {
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
         await transcribeAudio(audioBlob);
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
       };
 
       mediaRecorder.start();
@@ -64,6 +66,7 @@ export default function Home() {
     }
   };
 
+  // ✅ Stop recording
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
@@ -71,6 +74,7 @@ export default function Home() {
     }
   };
 
+  // ✅ Transcribe audio using OpenAI Whisper
   const transcribeAudio = async (audioBlob: Blob) => {
     try {
       setIsLoading(true);
@@ -87,6 +91,7 @@ export default function Home() {
     }
   };
 
+  // ✅ Text-to-speech using OpenAI API
   const speakText = async (text: string) => {
     try {
       const response = await openai.audio.speech.create({
@@ -104,6 +109,7 @@ export default function Home() {
     }
   };
 
+  // ✅ Handle user message submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
@@ -112,10 +118,10 @@ export default function Home() {
       role: 'user',
       content: input.trim(),
       timestamp: Date.now(),
-      id: `user-${Date.now()}`
+      id: `user-${Date.now()}`,
     };
-    
-    setMessages(prev => [...prev, userMessage]);
+
+    setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
 
@@ -126,10 +132,10 @@ export default function Home() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          messages: [...messages, userMessage].map(msg => ({
+          messages: [...messages, userMessage].map((msg) => ({
             role: msg.role,
-            content: msg.content
-          }))
+            content: msg.content,
+          })),
         }),
       });
 
@@ -138,26 +144,26 @@ export default function Home() {
       }
 
       const assistantMessage = await response.json();
-      
-      setMessages(prev => [
+
+      setMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
           content: assistantMessage.content,
           timestamp: Date.now(),
-          id: `assistant-${Date.now()}`
-        }
+          id: `assistant-${Date.now()}`,
+        },
       ]);
     } catch (error) {
       console.error('Error getting completion:', error);
-      setMessages(prev => [
+      setMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
           content: 'Sorry, I encountered an error. Please try again.',
           timestamp: Date.now(),
-          id: `error-${Date.now()}`
-        }
+          id: `error-${Date.now()}`,
+        },
       ]);
     } finally {
       setIsLoading(false);
@@ -187,7 +193,7 @@ export default function Home() {
                       <Bot size={20} className="text-blue-600" />
                     </div>
                   )}
-                  
+
                   <div
                     className={`flex flex-col max-w-[70%] ${
                       message.role === 'user' ? 'items-end' : 'items-start'
@@ -202,7 +208,7 @@ export default function Home() {
                     >
                       <p className="whitespace-pre-wrap">{message.content}</p>
                     </div>
-                    
+
                     {message.role === 'assistant' && (
                       <button
                         onClick={() => speakText(message.content)}
@@ -212,7 +218,7 @@ export default function Home() {
                         <Volume2 size={16} />
                       </button>
                     )}
-                    
+
                     {message.timestamp && (
                       <span className="text-xs text-gray-500 mt-1">
                         {new Date(message.timestamp).toLocaleTimeString()}
@@ -227,7 +233,7 @@ export default function Home() {
                   )}
                 </div>
               ))}
-              
+
               {isLoading && (
                 <div className="flex justify-start items-center space-x-2">
                   <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
@@ -235,9 +241,18 @@ export default function Home() {
                   </div>
                   <div className="bg-gray-100 rounded-2xl p-4">
                     <div className="flex space-x-2">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                      <div
+                        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                        style={{ animationDelay: '0ms' }}
+                      ></div>
+                      <div
+                        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                        style={{ animationDelay: '150ms' }}
+                      ></div>
+                      <div
+                        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                        style={{ animationDelay: '300ms' }}
+                      ></div>
                     </div>
                   </div>
                 </div>
